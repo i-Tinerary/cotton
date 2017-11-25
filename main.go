@@ -77,13 +77,17 @@ func (s *server) SetUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func (s *server) GetPlan(w http.ResponseWriter, r *http.Request) {
+	return
+}
+
 func main() {
 	port := os.Getenv("PORT")
 	redisURL := os.Getenv("REDIS_URL")
 
 	c, err := redis.DialURL(redisURL)
 	if err != nil {
-		log.Fatal("connecting to redis on %q: %v", redisURL, err)
+		log.Fatalf("connecting to redis on %q: %v", redisURL, err)
 	}
 	defer c.Close()
 
@@ -93,6 +97,18 @@ func main() {
 	r.HandleFunc("/users", s.GetUsers).Methods("GET")
 	r.HandleFunc("/users/{name}", s.GetUser).Methods("GET")
 	r.HandleFunc("/users/{name}", s.SetUser).Methods("POST")
+
+	// create a plan
+	r.HandleFunc("/plans", s.GetPlan).Methods("GET")
+
+	//
+	r.HandleFunc("/places/{place_id}", nil).Methods("GET")
+
+	// get all plans sorted chronologic
+	r.HandleFunc("/plans/{name}", nil)
+
+	// get a plan by id
+	r.HandleFunc("/plans/{name}/{plan_id}", nil).Methods("GET")
 
 	log.Fatal(http.ListenAndServe(":"+port, r))
 }
