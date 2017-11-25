@@ -12,4 +12,4 @@ build:
 run:
   deps: [build]
   cmds:
-    - PORT=8080 ./cotton
+    - PORT=8080 REDIS_URL=redis://localhost:6379/0 ./cotton
