@@ -6,7 +6,6 @@ type Place struct {
 	ExternURL string
 	PhotoURL  string
 	Name      string
-	Langitude float64
-	Longitude float64
+	LongLat   string
 	Rating    float64
 }

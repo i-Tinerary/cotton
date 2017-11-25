@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/i-tinerary/cotton/common"
@@ -26,7 +26,9 @@ func Serve(port string, storeURL *url.URL) error {
 	r.HandleFunc("/users", s.GetUsers).Methods("GET")
 	r.HandleFunc("/users/{name}", s.GetUser).Methods("GET")
 	r.HandleFunc("/users/{name}", s.SetUser).Methods("POST")
-	// create a plan
+	r.HandleFunc("/places", s.SetPlace).Methods("POST")
+	r.HandleFunc("/placse/{id}", s.GetPlace).Methods("GET")
+
 	r.HandleFunc("/plans", s.GetPlan).Methods("GET")
 	//
 	r.HandleFunc("/places/{place_id}", nil).Methods("GET")
@@ -42,22 +44,15 @@ type server struct {
 	store store.Interface
 }
 
-func makeResponse(w http.ResponseWriter, state int, msg string) {
-	w.WriteHeader(state)
-	if err := json.NewEncoder(w).Encode(msg); err != nil {
-		log.Printf("Error: Creating error response with state %d: %s", state, err)
-	}
-}
-
 func (s *server) GetUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := s.store.GetUsers()
 	if err != nil {
-		makeResponse(w, http.StatusInternalServerError, err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if err := json.NewEncoder(w).Encode(users); err != nil {
-		makeResponse(w, http.StatusBadRequest, err.Error())
+		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
 }
@@ -67,7 +62,7 @@ func (s *server) GetUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := s.store.GetUser(vars["name"])
 	if err != nil {
-		makeResponse(w, http.StatusNotFound, "user not found")
+		http.Error(w, "user not found", http.StatusNotFound)
 		return
 	}
 
@@ -80,11 +75,11 @@ func (s *server) SetUser(w http.ResponseWriter, r *http.Request) {
 
 	content, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024*1024))
 	if err != nil {
-		makeResponse(w, http.StatusBadRequest, err.Error())
+		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
 	if err := r.Body.Close(); err != nil {
-		makeResponse(w, http.StatusBadRequest, err.Error())
+		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
 
@@ -92,9 +87,54 @@ func (s *server) SetUser(w http.ResponseWriter, r *http.Request) {
 		Name: vars["name"],
 		Data: string(content),
 	})
-	w.WriteHeader(http.StatusOK)
 }
 
 func (s *server) GetPlan(w http.ResponseWriter, r *http.Request) {
 	return
+}
+
+func (s *server) SetPlace(w http.ResponseWriter, r *http.Request) {
+	content, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024*1024))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+	if err := r.Body.Close(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+
+	var place common.Place
+	err = json.Unmarshal(content, &place)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+
+	err = s.store.SetPlace(place)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+}
+
+func (s *server) GetPlace(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	place, err := s.store.GetPlace(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(place); err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
 }
