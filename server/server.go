@@ -28,9 +28,8 @@ func Serve(port string, storeURL *url.URL) error {
 	r.HandleFunc("/users/{name}", s.SetUser).Methods("POST")
 	r.HandleFunc("/places", s.SetPlace).Methods("POST")
 	r.HandleFunc("/placse/{id}", s.GetPlace).Methods("GET")
-
 	r.HandleFunc("/plans", s.GetPlan).Methods("GET")
-	//
+
 	r.HandleFunc("/places/{place_id}", nil).Methods("GET")
 	// get all plans sorted chronologic
 	r.HandleFunc("/plans/{name}", nil)
