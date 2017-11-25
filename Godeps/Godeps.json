@@ -1,0 +1,25 @@
+{
+	"ImportPath": "github.com/i-tinerary/cotton",
+	"GoVersion": "go1.9",
+	"GodepVersion": "v79",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/garyburd/redigo/internal",
+			"Comment": "v1.3.0-1-g4a7d9db",
+			"Rev": "4a7d9db4333c65288dd5fc8c8de7d1f229bb09ec"
+		},
+		{
+			"ImportPath": "github.com/garyburd/redigo/redis",
+			"Comment": "v1.3.0-1-g4a7d9db",
+			"Rev": "4a7d9db4333c65288dd5fc8c8de7d1f229bb09ec"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Comment": "v1.6.0-1-g2d5fef0",
+			"Rev": "2d5fef06b891c971b14aa6f71ca5ab6c03a36e0e"
+		}
+	]
+}
