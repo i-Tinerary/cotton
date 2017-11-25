@@ -80,6 +80,9 @@ func (i *impl) GetPlace(id int) (common.Place, error) {
 	return place, nil
 }
 
-func (i *impl) SetPlan(common.Plan) error                { return nil }
+func (i *impl) SetPlan(plan common.Plan) error {
+	return nil
+}
+
 func (i *impl) GetPlan(string, int) (common.Plan, error) { return common.Plan{}, nil }
 func (i *impl) GetPlans(string) ([]common.Plan, error)   { return nil, nil }

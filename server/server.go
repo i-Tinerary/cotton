@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/i-tinerary/cotton/plan"
+
 	"github.com/gorilla/mux"
 	"github.com/i-tinerary/cotton/common"
 	"github.com/i-tinerary/cotton/store"
@@ -27,10 +29,15 @@ func Serve(port string, storeURL *url.URL) error {
 	r.HandleFunc("/users/{name}", s.GetUser).Methods("GET")
 	r.HandleFunc("/users/{name}", s.SetUser).Methods("POST")
 	r.HandleFunc("/places", s.SetPlace).Methods("POST")
-	r.HandleFunc("/placse/{id}", s.GetPlace).Methods("GET")
-	r.HandleFunc("/plans", s.GetPlan).Methods("GET")
+	r.HandleFunc("/places/{id}", s.GetPlace).Methods("GET")
 
-	r.HandleFunc("/places/{place_id}", nil).Methods("GET")
+	// query params:
+	// location
+	// from
+	// to
+	// budget
+	r.HandleFunc("/plans/{name}", s.GetPlan).Methods("GET")
+
 	// get all plans sorted chronologic
 	r.HandleFunc("/plans/{name}", nil)
 	// get a plan by id
@@ -89,7 +96,28 @@ func (s *server) SetUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) GetPlan(w http.ResponseWriter, r *http.Request) {
-	return
+	vars := mux.Vars(r)
+
+	vals := r.URL.Query()
+	location := vals.Get("location")
+	if location == "" {
+		http.Error(w, "location has to be set", http.StatusBadRequest)
+		return
+	}
+
+	name := vars["name"]
+
+	user, err := s.store.GetUser(name)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	p := plan.CreatePlan(user, location)
+
+	if err := json.NewEncoder(w).Encode(p); err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
 }
 
 func (s *server) SetPlace(w http.ResponseWriter, r *http.Request) {

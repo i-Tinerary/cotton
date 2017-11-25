@@ -3,11 +3,12 @@ package common
 import "time"
 
 type Plan struct {
-	Name   string
-	Events []Event
+	PlanName string
+	PlanUser string
+	Events   []Event
 }
 
 type Event struct {
-	PlaceName string
-	Time      time.Time
+	PlaceID string
+	Time    time.Time
 }
