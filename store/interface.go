@@ -30,5 +30,5 @@ func GetStore(url *url.URL) (Interface, error) {
 		}
 		return &impl{conn: conn}, nil
 	}
-	return nil, fmt.Errorf("unsupported url %q with scheme %q", url.String(), url.Scheme())
+	return nil, fmt.Errorf("unsupported url %q with scheme %q", url.String(), url.Scheme)
 }

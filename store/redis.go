@@ -18,9 +18,13 @@ func (i *impl) SetUser(u common.User) error {
 	if err != nil {
 		return fmt.Errorf("SetUser: marshal: %v", err)
 	}
+	_, err = i.conn.Do("SADD", "users", u.Name)
+	if err != nil {
+		return fmt.Errorf("SetUser: redis1: %v", err)
+	}
 	_, err = i.conn.Do("SET", "user:"+u.Name, data)
 	if err != nil {
-		return fmt.Errorf("SetUser: redis: %v", err)
+		return fmt.Errorf("SetUser: redis2: %v", err)
 	}
 
 	return nil
