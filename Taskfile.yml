@@ -1,0 +1,15 @@
+# github.com/go-task/task
+
+default:
+  cmds:
+    - echo "Hello, World!"
+
+
+build:
+  cmds:
+    - go build
+
+run:
+  deps: [build]
+  cmds:
+    - PORT=8080 ./cotton
