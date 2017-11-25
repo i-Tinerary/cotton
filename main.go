@@ -24,10 +24,23 @@ func makeResponse(w http.ResponseWriter, state int, msg string) {
 	}
 }
 
+func (s *server) GetUsers(w http.ResponseWriter, r *http.Request) {
+	users, err := redis.Strings(s.db.Do("SMEMBERS", "users"))
+	if err != nil {
+		makeResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(users); err != nil {
+		makeResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+}
+
 func (s *server) GetUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	pref, err := redis.String(s.db.Do("GET", vars["name"]))
+	pref, err := redis.String(s.db.Do("GET", "U:"+vars["name"]))
 	if err != nil {
 		makeResponse(w, http.StatusNotFound, "user not found")
 		return
@@ -40,7 +53,6 @@ func (s *server) GetUser(w http.ResponseWriter, r *http.Request) {
 func (s *server) SetUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-
 	content, err := ioutil.ReadAll(io.LimitReader(r.Body, 1024*1024))
 	if err != nil {
 		makeResponse(w, http.StatusBadRequest, err.Error())
@@ -50,8 +62,13 @@ func (s *server) SetUser(w http.ResponseWriter, r *http.Request) {
 		makeResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	_, err = s.db.Do("SADD", "users", vars["name"])
+	if err != nil {
+		makeResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
-	_, err = s.db.Do("SET", vars["name"], string(content))
+	_, err = s.db.Do("SET", "U:"+vars["name"], string(content))
 	if err != nil {
 		makeResponse(w, http.StatusBadRequest, err.Error())
 		return
@@ -73,6 +90,7 @@ func main() {
 	s := &server{db: c}
 
 	r := mux.NewRouter()
+	r.HandleFunc("/users", s.GetUsers).Methods("GET")
 	r.HandleFunc("/users/{name}", s.GetUser).Methods("GET")
 	r.HandleFunc("/users/{name}", s.SetUser).Methods("POST")
 
