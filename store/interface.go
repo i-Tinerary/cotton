@@ -3,6 +3,7 @@ package store
 import (
 	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/i-tinerary/cotton/common"
@@ -18,7 +19,7 @@ type Interface interface {
 
 	SetPlan(common.Plan) error
 	GetPlan(string, int) (common.Plan, error)
-	GetPlans(string) ([]common.Plan, error)
+	GetPlans(string, time.Time, time.Time) ([]common.Plan, error)
 }
 
 func GetStore(url *url.URL) (Interface, error) {

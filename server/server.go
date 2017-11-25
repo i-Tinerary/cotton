@@ -30,13 +30,8 @@ func Serve(port string, storeURL *url.URL) error {
 	r.HandleFunc("/users/{name}", s.SetUser).Methods("POST")
 	r.HandleFunc("/places", s.SetPlace).Methods("POST")
 	r.HandleFunc("/places/{id}", s.GetPlace).Methods("GET")
-
-	// query params:
-	// location
-	// from
-	// to
-	// budget
 	r.HandleFunc("/plans/{name}", s.GetPlan).Methods("GET")
+	r.HandleFunc("/plans/{name}", s.SetPlan).Methods("POST")
 
 	// get all plans sorted chronologic
 	r.HandleFunc("/plans/{name}", nil)
@@ -118,6 +113,11 @@ func (s *server) GetPlan(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
+}
+
+func (s *server) SetPlan(w http.ResponseWriter, r *http.Request) {
+	//	vars := mux.Vars(r)
+
 }
 
 func (s *server) SetPlace(w http.ResponseWriter, r *http.Request) {

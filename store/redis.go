@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/i-tinerary/cotton/common"
@@ -81,8 +82,55 @@ func (i *impl) GetPlace(id int) (common.Place, error) {
 }
 
 func (i *impl) SetPlan(plan common.Plan) error {
+	id, err := redis.Int(i.conn.Do("INCR", "plans: "+plan.PlanUser+":ids"))
+	if err != nil {
+		return fmt.Errorf("SetPlan: create id: %v", err)
+	}
+
+	_, err = i.conn.Do("ZADD", "plans:"+plan.PlanUser, plan.Start.Unix(), id)
+	if err != nil {
+		return fmt.Errorf("SetPlan: add plan sorted set: %v", err)
+	}
+
+	data, err := json.Marshal(plan)
+	if err != nil {
+		return fmt.Errorf("SetPlan: marshal: %v", err)
+	}
+
+	_, err = i.conn.Do(
+		"HMSET",
+		"plan:"+plan.PlanUser+":"+strconv.Itoa(id),
+		"name",
+		plan.PlanName,
+		"data",
+		data,
+	)
+	if err != nil {
+		return fmt.Errorf("SetPlan: add plan hash: %v", err)
+	}
+
 	return nil
 }
 
-func (i *impl) GetPlan(string, int) (common.Plan, error) { return common.Plan{}, nil }
-func (i *impl) GetPlans(string) ([]common.Plan, error)   { return nil, nil }
+func (i *impl) GetPlan(name string, id int) (common.Plan, error) {
+	data, err := redis.Bytes(i.conn.Do(
+		"HGET",
+		"plan:"+name+":"+strconv.Itoa(id),
+		"data",
+	))
+	if err != nil {
+		return common.Plan{}, fmt.Errorf("GetPlan: redis: %v", err)
+	}
+	var plan common.Plan
+
+	err = json.Unmarshal(data, &plan)
+	if err != nil {
+		return common.Plan{}, fmt.Errorf("GetPlan: unmarshal: %v", err)
+	}
+
+	return plan, nil
+}
+
+func (i *impl) GetPlans(name string, start, end time.Time) ([]common.Plan, error) {
+	return nil, nil
+}
